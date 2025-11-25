@@ -12,7 +12,7 @@ import java.util.Stack;
  *  rooms, creates the parser and starts the game.  It also evaluates and
  *  executes the commands that the parser returns.
  * 
- * @author  Michael Kölling and David J. Barnes
+ * @author  Michael Kölling and David J. Barnes Trevor McQueen
  * @version 2016.02.29
  */
 
