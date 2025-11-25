@@ -1,3 +1,4 @@
+import java.util.Stack;
 /**
  *  This class is the main class of the "World of Zuul" application. 
  *  "World of Zuul" is a very simple, text based adventure game.  Users 
@@ -11,7 +12,7 @@
  *  rooms, creates the parser and starts the game.  It also evaluates and
  *  executes the commands that the parser returns.
  * 
- * @author  Michael Kölling and David J. Barnes
+ * @author  Michael Kölling and David J. Barnes Trevor McQueen
  * @version 2016.02.29
  */
 
@@ -19,7 +20,8 @@ public class Game
 {
     private Parser parser;
     private Room currentRoom;
-        
+    private Player player;
+    private Stack<Room> previousRooms;
     /**
      * Create the game and initialise its internal map.
      */
@@ -27,6 +29,8 @@ public class Game
     {
         createRooms();
         parser = new Parser();
+        previousRooms = new Stack<>();
+        player = new Player(currentRoom);
     }
 
     /**
@@ -34,7 +38,7 @@ public class Game
      */
     private void createRooms()
     {
-        Room outside, theater, pub, lab, office;
+        Room outside, theater, pub, lab, office,hallway,basement,roof;
       
         // create the rooms
         outside = new Room("outside the main entrance of the university");
@@ -42,7 +46,10 @@ public class Game
         pub = new Room("in the campus pub");
         lab = new Room("in a computing lab");
         office = new Room("in the computing admin office");
-        
+        hallway = new Room("in a long hallway buzzing with lights");
+        basement = new Room("in a dark, cold basement");
+        roof = new Room("on the windy rooftop");
+        outside.addItem(new Item("rock", 1));
         // initialise room exits
         outside.setExit("east", theater);
         outside.setExit("south", lab);
@@ -56,8 +63,14 @@ public class Game
         lab.setExit("east", office);
 
         office.setExit("west", lab);
-
+        office.setExit("north", hallway);
+        hallway.setExit("south",office);
+        hallway.setExit("down", basement);
+        basement.setExit("up", hallway);
+        hallway.setExit("up", roof);
+        roof.setExit("down",hallway);
         currentRoom = outside;  // start game outside
+        player = new Player(currentRoom);
     }
 
     /**
@@ -110,10 +123,27 @@ public class Game
             case HELP:
                 printHelp();
                 break;
+            
+            case LOOK:
+                look();
+                break;
+            
 
             case GO:
                 goRoom(command);
                 break;
+            
+            case TAKE:
+                takeItem(command);
+                break;
+                
+            case INVENTORY:
+                showInventory();
+                break;
+            
+            case BACK:
+                back();
+                break; 
 
             case QUIT:
                 wantToQuit = quit(command);
@@ -137,11 +167,67 @@ public class Game
         System.out.println("Your command words are:");
         parser.showCommands();
     }
+    /**
+     * print the rooms description
+     */
+    private void look()
+    { 
+        System.out.println(currentRoom.getLongDescription());
+    }
+    
+    /**
+     * go back to the previous room
+     */
+    private void back()
+    { 
+        if (previousRooms.empty()) {
+            System.out.print("you cant go back any further!");
+            return;
+        }
+        currentRoom = previousRooms.pop();
+        player.setCurrentRoom(currentRoom);
+        System.out.println(currentRoom.getLongDescription());
+    }
+    /**
+     * Take an item from the current room and put it in the inventory
+     */
+    private void takeItem(Command command)
+    { 
+        if(!command.hasSecondWord()) {
+            System.out.println("Take what?");
+            return;
+        }
+        
+        String itemName = command.getSecondWord();
+        
+        // remove item from the room
+        Item item = currentRoom.removeItem(itemName);
+        if(item == null) {
+            System.out.println("There is no " + itemName + " here.");
+        }
+        else { 
+            player.addItem(item);
+            System.out.println("You picked up the " + itemName + ".");
+        }
+    }
+    
+    /**
+     * show everything the player is carrying
+     */
+    private void showInventory()
+    {
+        System.out.println(player.getInventoryDescription());
+        
+    }
+    
+        
+        
 
     /** 
      * Try to go in one direction. If there is an exit, enter the new
      * room, otherwise print an error message.
      */
+
     private void goRoom(Command command) 
     {
         if(!command.hasSecondWord()) {
@@ -159,7 +245,9 @@ public class Game
             System.out.println("There is no door!");
         }
         else {
+            previousRooms.push(currentRoom);
             currentRoom = nextRoom;
+            player.setCurrentRoom(currentRoom);
             System.out.println(currentRoom.getLongDescription());
         }
     }
