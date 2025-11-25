@@ -1,7 +1,7 @@
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Iterator;
-
+import java.util.ArrayList;
 /**
  * Class Room - a room in an adventure game.
  *
@@ -20,7 +20,7 @@ public class Room
 {
     private String description;
     private HashMap<String, Room> exits;        // stores exits of this room.
-
+    private ArrayList<Item> items;
     /**
      * Create a room described "description". Initially, it has
      * no exits. "description" is something like "a kitchen" or
@@ -31,8 +31,37 @@ public class Room
     {
         this.description = description;
         exits = new HashMap<>();
+        items = new ArrayList<>();
     }
-
+    /**
+     * Add an item to this room.
+     */
+    public void addItem(Item item)
+    { 
+        items.add(item);
+    } 
+    
+    /**
+     * Remove and return an item by name.
+     */
+    public Item removeItem(String itemName)
+    { 
+        for(Item i : items) {
+            if(i.getDescription().equalsIgnoreCase(itemName)) {
+                items.remove(i);
+                return i;
+            }
+        }
+        return null;
+    }
+    
+    public ArrayList<Item> getItems()
+    { 
+        return items;
+    }
+    
+     
+    
     /**
      * Define an exit from this room.
      * @param direction The direction of the exit.
@@ -60,8 +89,22 @@ public class Room
      */
     public String getLongDescription()
     {
-        return "You are " + description + ".\n" + getExitString();
-    }
+        StringBuilder itemText = new StringBuilder();
+        
+        if(items.isEmpty()) { 
+            itemText.append("No items here.\n");
+        } else { 
+            itemText.append("Items here:\n");
+            for(Item i : items) { 
+                itemText.append(" - ").append(i.getLongDescription()).append("\n");
+            }
+            
+        }
+        return "You are " + description + ".\n"
+                + itemText.toString()
+                + getExitString();
+            }
+     
 
     /**
      * Return a string describing the room's exits, for example
